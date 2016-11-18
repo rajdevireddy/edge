@@ -5,8 +5,27 @@
   (:require
    [yada.yada :as yada]))
 
+
+(defmethod yada.authorization/validate
+           :my/custom-authorization
+           [ctx credentials authorization]
+           (println (str "Custom auth invoked - " authorization))
+           {:userid "test"
+            :roles #{:admin}})
+
 (defn hello-routes []
-  ["/hello" (yada/handler "Hello World!\n")])
+      ["/hello" (yada/resource  {:id          :test-resource/hello
+                                 :description "Says Hello!"
+                                 :produces    "text/plain"
+                                 :access-control {
+                                                  :authorization
+                                                  {:scheme :my/custom-authorization
+                                                   :my/ensure [:same-account]
+                                                   :methods {:get :Some-Role-Name}}
+                                                  }
+
+                                 :methods
+                                 {:get {:response "Hello world!!!\n"}}})])
 
 (defn hello-language []
   ["/hello-language"
